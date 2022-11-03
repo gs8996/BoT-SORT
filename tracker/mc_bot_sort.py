@@ -302,6 +302,7 @@ class BoTSORT(object):
                 detections = [STrack(STrack.tlbr_to_tlwh(tlbr), s, c) for
                               (tlbr, s, c) in zip(dets, scores_keep, classes_keep)]
         else:
+
             detections = []
 
         ''' Add newly detected tracklets to tracked_stracks'''
