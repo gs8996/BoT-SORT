@@ -38,7 +38,7 @@ def make_parser():
     parser.add_argument("--save-frames", dest="save_frames", default=False, action="store_true", help="save sequences with tracks.")
 
     # Detector
-    parser.add_argument("--device", default="gpu", type=str, help="device to run our model, can either be cpu or gpu")
+    parser.add_argument("--device", default="cpu", type=str, help="device to run our model, can either be cpu or gpu")
     parser.add_argument("--conf", default=None, type=float, help="test conf")
     parser.add_argument("--nms", default=None, type=float, help="test nms threshold")
     parser.add_argument("--tsize", default=None, type=int, help="test img size")
@@ -236,7 +236,7 @@ def main(exp, args):
     model = exp.get_model().to(args.device)
     logger.info("Model Summary: {}".format(get_model_info(model, exp.test_size)))
     model.eval()
-
+    #load yolo model
     if args.ckpt is None:
         ckpt_file = osp.join(output_dir, "best_ckpt.pth.tar")
     else:

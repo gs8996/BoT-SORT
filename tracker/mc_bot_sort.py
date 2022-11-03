@@ -242,6 +242,7 @@ class BoTSORT(object):
 
         self.buffer_size = int(frame_rate / 30.0 * args.track_buffer)
         self.max_time_lost = self.buffer_size
+        #compute motion direction of object
         self.kalman_filter = KalmanFilter()
 
         # ReID module
@@ -288,6 +289,7 @@ class BoTSORT(object):
             classes_keep = []
 
         '''Extract embeddings '''
+        #  extract good feature of detection for tracking
         if self.args.with_reid:
             features_keep = self.encoder.inference(img, dets)
 
@@ -305,6 +307,7 @@ class BoTSORT(object):
         ''' Add newly detected tracklets to tracked_stracks'''
         unconfirmed = []
         tracked_stracks = []  # type: list[STrack]
+        print("self.tracked_stracks:::",self.tracked_stracks)
         for track in self.tracked_stracks:
             if not track.is_activated:
                 unconfirmed.append(track)

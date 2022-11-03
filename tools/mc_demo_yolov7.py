@@ -19,8 +19,9 @@ from yolov7.utils.torch_utils import select_device, load_classifier, time_synchr
 from tracker.mc_bot_sort import BoTSORT
 from tracker.tracking_utils.timer import Timer
 
-sys.path.insert(0, './yolov7')
+sys.path.insert(0, '../yolov7')
 sys.path.append('.')
+
 
 def write_results(filename, results):
     save_format = '{frame},{id},{x1},{y1},{w},{h},{s},-1,-1,-1\n'
@@ -40,7 +41,7 @@ def detect(save_img=False):
     source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, opt.trace
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
-        ('rtsp://', 'rtmp://', 'http://', 'https://'))
+        ('rtsp://', 'rtmp://', 'http://', 'https://')) or source.lower().endswith('mp4')
 
     # Directories
     save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
@@ -52,6 +53,7 @@ def detect(save_img=False):
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
     # Load model
+    print("loading model:",weights,device)
     model = attempt_load(weights, map_location=device)  # load FP32 model
     stride = int(model.stride.max())  # model stride
     imgsz = check_img_size(imgsz, s=stride)  # check img_size
@@ -82,7 +84,7 @@ def detect(save_img=False):
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(100)]
 
     # Create tracker
-    tracker = BoTSORT(opt, frame_rate=30.0)
+    tracker = BoTSORT(opt)
 
     # Run inference
     if device.type != 'cpu':
@@ -123,9 +125,8 @@ def detect(save_img=False):
                 boxes = boxes.cpu().numpy()
                 detections = det.cpu().numpy()
                 detections[:, :4] = boxes
-
+            print(detections.shape,im0.shape)
             online_targets = tracker.update(detections, im0)
-
             online_tlwhs = []
             online_ids = []
             online_scores = []
@@ -151,6 +152,7 @@ def detect(save_img=False):
                             label = f'{tid}, {int(tcls)}'
                         else:
                             label = f'{tid}, {names[int(tcls)]}'
+
                         plot_one_box(tlbr, im0, label=label, color=colors[int(tid) % len(colors)], line_thickness=2)
             p = Path(p)  # to Path
             save_path = str(save_dir / p.name)  # img.jpg
@@ -196,7 +198,7 @@ if __name__ == '__main__':
     parser.add_argument('--img-size', type=int, default=1920, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.09, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.7, help='IOU threshold for NMS')
-    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--device', default='cpu', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--view-img', action='store_true', help='display results')
     parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
     parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
@@ -228,9 +230,9 @@ if __name__ == '__main__':
 
     # ReID
     parser.add_argument("--with-reid", dest="with_reid", default=False, action="store_true", help="with ReID module.")
-    parser.add_argument("--fast-reid-config", dest="fast_reid_config", default=r"fast_reid/configs/MOT17/sbs_S50.yml",
+    parser.add_argument("--fast-reid-config", dest="fast_reid_config", default=r"/media/alan/Projects/BoT-SORT/fast_reid/configs/MOT17/sbs_S50.yml",
                         type=str, help="reid config file path")
-    parser.add_argument("--fast-reid-weights", dest="fast_reid_weights", default=r"pretrained/mot17_sbs_S50.pth",
+    parser.add_argument("--fast-reid-weights", dest="fast_reid_weights", default=r"/media/alan/Projects/BoT-SORT/pretrained/mot17_sbs_S50.pth",
                         type=str, help="reid config file path")
     parser.add_argument('--proximity_thresh', type=float, default=0.5,
                         help='threshold for rejecting low overlap reid matches')

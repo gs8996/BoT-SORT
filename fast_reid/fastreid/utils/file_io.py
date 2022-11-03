@@ -16,7 +16,6 @@ from typing import (
     Optional,
     Union,
 )
-
 __all__ = ["PathManager", "get_cache_dir"]
 
 
